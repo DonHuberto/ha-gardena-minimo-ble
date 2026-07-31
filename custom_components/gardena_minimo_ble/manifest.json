@@ -1,0 +1,26 @@
+{
+  "domain": "gardena_minimo_ble",
+  "name": "GARDENA SILENO minimo BLE",
+  "version": "0.1.0",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4"
+    }
+  ],
+  "codeowners": [
+    "@DonHuberto"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/DonHuberto/ha-gardena-minimo-ble",
+  "issue_tracker": "https://github.com/DonHuberto/ha-gardena-minimo-ble/issues",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": [
+    "automower-ble==0.2.9",
+    "gardena-bluetooth==2.8.1"
+  ]
+}

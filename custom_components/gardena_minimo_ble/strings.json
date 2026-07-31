@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This mower is already configured.",
+      "cannot_connect": "Failed to connect.",
+      "no_devices_found": "Restart the mower and try again while it advertises pairable=True.",
+      "reauth_successful": "Reauthentication was successful.",
+      "unknown": "Unexpected error."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect. Restart the mower and submit the form while it advertises pairable=True.",
+      "invalid_auth": "Unable to authenticate. Verify the numeric PIN and restart the mower to reopen the pairing window.",
+      "invalid_pin": "The PIN must contain only digits."
+    },
+    "flow_title": "{name} ({address})",
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "Numeric mower PIN"
+        },
+        "data_description": {
+          "pin": "Button mapping: Power=1, Schedule=2, Start=3, Park/Home=4."
+        },
+        "description": "Set up {name}. Restart the mower first and submit this form while it advertises pairable=True."
+      },
+      "reauth_confirm": {
+        "data": {
+          "pin": "Numeric mower PIN"
+        },
+        "data_description": {
+          "pin": "Button mapping: Power=1, Schedule=2, Start=3, Park/Home=4."
+        },
+        "description": "Restart the mower and confirm the PIN for {name}."
+      },
+      "user": {
+        "data": {
+          "address": "Mower BLE address",
+          "pin": "Numeric mower PIN"
+        },
+        "data_description": {
+          "pin": "Button mapping: Power=1, Schedule=2, Start=3, Park/Home=4."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Unable to connect to device {address} due to {error}: {reason}"
+    },
+    "pin_required": {
+      "message": "A PIN is required for {domain_name}"
+    }
+  }
+}

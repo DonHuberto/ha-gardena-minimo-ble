@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Ta kosiarka jest już skonfigurowana.",
+      "cannot_connect": "Nie udało się połączyć.",
+      "no_devices_found": "Uruchom ponownie kosiarkę i spróbuj, gdy rozgłasza pairable=True.",
+      "reauth_successful": "Ponowne uwierzytelnienie zakończyło się powodzeniem.",
+      "unknown": "Wystąpił nieoczekiwany błąd."
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć. Uruchom ponownie kosiarkę i zatwierdź formularz, gdy rozgłasza pairable=True.",
+      "invalid_auth": "Nie udało się uwierzytelnić. Sprawdź numeryczny PIN i uruchom ponownie kosiarkę, aby otworzyć okno parowania.",
+      "invalid_pin": "PIN może zawierać wyłącznie cyfry."
+    },
+    "flow_title": "{name} ({address})",
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "Numeryczny PIN kosiarki"
+        },
+        "data_description": {
+          "pin": "Mapowanie przycisków: ON/OFF=1, Harmonogram=2, Start=3, Park/Home=4."
+        },
+        "description": "Skonfiguruj {name}. Najpierw uruchom ponownie kosiarkę i zatwierdź formularz, gdy rozgłasza pairable=True."
+      },
+      "reauth_confirm": {
+        "data": {
+          "pin": "Numeryczny PIN kosiarki"
+        },
+        "data_description": {
+          "pin": "Mapowanie przycisków: ON/OFF=1, Harmonogram=2, Start=3, Park/Home=4."
+        },
+        "description": "Uruchom ponownie kosiarkę i potwierdź PIN dla {name}."
+      },
+      "user": {
+        "data": {
+          "address": "Adres BLE kosiarki",
+          "pin": "Numeryczny PIN kosiarki"
+        },
+        "data_description": {
+          "pin": "Mapowanie przycisków: ON/OFF=1, Harmonogram=2, Start=3, Park/Home=4."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "connection_failed": {
+      "message": "Nie udało się połączyć z urządzeniem {address}. Błąd: {error}. Diagnostyka: {reason}"
+    },
+    "pin_required": {
+      "message": "Integracja {domain_name} wymaga kodu PIN"
+    }
+  }
+}
