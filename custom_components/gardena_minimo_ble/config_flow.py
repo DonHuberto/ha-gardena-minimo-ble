@@ -30,6 +30,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 REAUTH_SCHEMA = BLUETOOTH_SCHEMA
+PAIRABLE_FIELDS = {"group", "model", "variant", "pairable"}
 
 
 def _pin_valid(pin: str) -> bool:
@@ -77,8 +78,74 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
 
         self.pairable = manufacturer_data.pairable
-        LOGGER.debug("Supported mower: %s", manufacturer_data)
+        LOGGER.info(
+            "PAIRING STATE [discovery] address=%s: pairable=%s; data=%s",
+            discovery_info.address,
+            self.pairable,
+            manufacturer_data,
+        )
         return True
+
+    async def _log_pairing_state(
+        self,
+        stage: str,
+        *,
+        timeout: float = 5.0,
+    ) -> bool | None:
+        """Read and log an explicit, human-readable mower pairing state."""
+        assert self.address
+
+        try:
+            manufacturer_data_by_address = await async_get_manufacturer_data(
+                {self.address},
+                fields=PAIRABLE_FIELDS,
+                timeout=timeout,
+            )
+        except TimeoutError:
+            self.pairable = None
+            LOGGER.warning(
+                "PAIRING STATE [%s] address=%s: pairable=UNKNOWN; "
+                "no complete manufacturer packet received within %.1f seconds",
+                stage,
+                self.address,
+                timeout,
+            )
+            return None
+
+        manufacturer_data = manufacturer_data_by_address.get(self.address)
+        if manufacturer_data is None:
+            self.pairable = None
+            LOGGER.warning(
+                "PAIRING STATE [%s] address=%s: pairable=UNKNOWN; "
+                "manufacturer data unavailable",
+                stage,
+                self.address,
+            )
+            return None
+
+        self.pairable = manufacturer_data.pairable
+        message = (
+            "PAIRING STATE [%s] address=%s: pairable=%s; "
+            "serial=%s group=%s model=%s variant=%s"
+        )
+        arguments = (
+            stage,
+            self.address,
+            self.pairable,
+            manufacturer_data.serial,
+            manufacturer_data.group,
+            manufacturer_data.model,
+            manufacturer_data.variant,
+        )
+
+        if self.pairable is True:
+            LOGGER.info(message, *arguments)
+        elif self.pairable is False:
+            LOGGER.warning(message, *arguments)
+        else:
+            LOGGER.warning(message, *arguments)
+
+        return self.pairable
 
     @override
     async def async_step_bluetooth(
@@ -119,9 +186,9 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if self.pairable is False:
                     LOGGER.warning(
-                        "The mower does not appear to be pairable. "
-                        "Restart it and submit the form while manufacturer "
-                        "data reports pairable=True."
+                        "The mower did not appear pairable during discovery. "
+                        "The state will be checked again immediately before "
+                        "the connection attempt."
                     )
 
                 result = await self._connect_and_stage()
@@ -214,6 +281,7 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
         channel_id = channel_id or random.randint(1, 0xFFFFFFFF)
         mower = Mower(channel_id, self.address, int(self.pin))
 
+        await self._log_pairing_state("immediately before connection")
         await close_stale_connections_by_address(self.address)
 
         device = bluetooth.async_ble_device_from_address(
@@ -241,12 +309,23 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 if mower.is_connected():
                     await mower.disconnect()
 
+                await self._log_pairing_state(
+                    "after rejected connection",
+                    timeout=3.0,
+                )
+
                 if response_result in (
                     ResponseResult.INVALID_PIN,
                     ResponseResult.NOT_ALLOWED,
                 ):
                     return "invalid_auth"
                 return "cannot_connect"
+
+            LOGGER.info(
+                "PAIRING RESULT address=%s: Bluetooth authentication and "
+                "Automower protocol handshake succeeded",
+                self.address,
+            )
 
             try:
                 model = await mower.get_model()
@@ -258,12 +337,17 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except (BleakError, TimeoutError) as exception:
             LOGGER.exception(
-                "Unable to pair with mower %s: %s",
+                "PAIRING RESULT address=%s: FAILED: %s",
                 self.address,
                 exception,
             )
             if mower.is_connected():
                 await mower.disconnect()
+
+            await self._log_pairing_state(
+                "after failed connection",
+                timeout=3.0,
+            )
             return "cannot_connect"
 
         domain_data = self.hass.data.setdefault(DOMAIN, {})
