@@ -30,7 +30,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 REAUTH_SCHEMA = BLUETOOTH_SCHEMA
-PAIRABLE_FIELDS = {"group", "model", "variant", "pairable"}
+PAIRABLE_FIELDS = {"pairable"}
 
 
 def _pin_valid(pin: str) -> bool:
@@ -90,7 +90,7 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         stage: str,
         *,
-        timeout: float = 5.0,
+        timeout: float = 12.0,
     ) -> bool | None:
         """Read and log an explicit, human-readable mower pairing state."""
         assert self.address
@@ -124,6 +124,22 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
 
         self.pairable = manufacturer_data.pairable
+
+        if self.pairable is None:
+            LOGGER.warning(
+                "PAIRING STATE [%s] address=%s: pairable=UNKNOWN; "
+                "only partial manufacturer data was received within %.1f seconds; "
+                "serial=%s group=%s model=%s variant=%s",
+                stage,
+                self.address,
+                timeout,
+                manufacturer_data.serial,
+                manufacturer_data.group,
+                manufacturer_data.model,
+                manufacturer_data.variant,
+            )
+            return None
+
         message = (
             "PAIRING STATE [%s] address=%s: pairable=%s; "
             "serial=%s group=%s model=%s variant=%s"
@@ -140,8 +156,6 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.pairable is True:
             LOGGER.info(message, *arguments)
-        elif self.pairable is False:
-            LOGGER.warning(message, *arguments)
         else:
             LOGGER.warning(message, *arguments)
 
@@ -311,7 +325,7 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 await self._log_pairing_state(
                     "after rejected connection",
-                    timeout=3.0,
+                    timeout=12.0,
                 )
 
                 if response_result in (
@@ -346,7 +360,7 @@ class GardenaMinimoBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self._log_pairing_state(
                 "after failed connection",
-                timeout=3.0,
+                timeout=12.0,
             )
             return "cannot_connect"
 
